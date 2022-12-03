@@ -77,18 +77,15 @@ impl PartOneStrategy {
 impl ParsingStrategy for PartOneStrategy {
     fn parse_line(&mut self, line: &str) -> RpsRound {
         let moves = line.split_ascii_whitespace().take(2).collect::<Vec<_>>();
-        let (their_move, my_move) = match moves[..] {
-            [their_move, my_move] => (their_move, my_move),
-            _ => unreachable!(),
+        let (theirs, mine) = match moves[..] {
+            [theirs, mine] => (theirs, mine),
+            _ => panic!(),
         };
 
-        let their_move = self.parse_move(their_move);
-        let my_move = self.parse_move(my_move);
+        let theirs = self.parse_move(theirs);
+        let mine = self.parse_move(mine);
 
-        RpsRound {
-            their_move,
-            my_move,
-        }
+        RpsRound { theirs, mine }
     }
 }
 
@@ -104,33 +101,21 @@ impl PartTwoStrategy {
         let c = move_str.chars().next().unwrap();
 
         match c {
-            'A' | 'X' => RpsMove::Rock,
-            'B' | 'Y' => RpsMove::Paper,
-            'C' | 'Z' => RpsMove::Scissors,
+            'A' => RpsMove::Rock,
+            'B' => RpsMove::Paper,
+            'C' => RpsMove::Scissors,
             _ => panic!(),
         }
     }
 
     fn parse_my_move(their_move: RpsMove, move_str: &str) -> RpsMove {
-        enum MyMoveGoal {
-            Win,
-            Draw,
-            Lose,
-        }
-
         let c = move_str.chars().next().unwrap();
 
-        let my_goal = match c {
-            'X' => MyMoveGoal::Lose,
-            'Y' => MyMoveGoal::Draw,
-            'Z' => MyMoveGoal::Win,
+        match c {
+            'X' => their_move.get_losing_move(),
+            'Y' => their_move,
+            'Z' => their_move.get_winning_move(),
             _ => panic!(),
-        };
-
-        match my_goal {
-            MyMoveGoal::Win => their_move.get_winning_move(),
-            MyMoveGoal::Draw => their_move,
-            MyMoveGoal::Lose => their_move.get_losing_move(),
         }
     }
 }
@@ -138,25 +123,22 @@ impl PartTwoStrategy {
 impl ParsingStrategy for PartTwoStrategy {
     fn parse_line(&mut self, line: &str) -> RpsRound {
         let moves = line.split_ascii_whitespace().take(2).collect::<Vec<_>>();
-        let (their_move, my_move) = match moves[..] {
-            [their_move, my_move] => (their_move, my_move),
-            _ => unreachable!(),
+        let (theirs, mine) = match moves[..] {
+            [theirs, mine] => (theirs, mine),
+            _ => panic!(),
         };
 
-        let their_move = Self::parse_their_move(their_move);
-        let my_move = Self::parse_my_move(their_move, my_move);
+        let theirs = Self::parse_their_move(theirs);
+        let mine = Self::parse_my_move(theirs, mine);
 
-        RpsRound {
-            their_move,
-            my_move,
-        }
+        RpsRound { theirs, mine }
     }
 }
 
 #[derive(Copy, Clone)]
 struct RpsRound {
-    their_move: RpsMove,
-    my_move: RpsMove,
+    theirs: RpsMove,
+    mine: RpsMove,
 }
 
 impl RpsRound {
@@ -165,11 +147,11 @@ impl RpsRound {
     }
 
     fn score(&self) -> usize {
-        self.my_move.move_score() + self.outcome_score()
+        self.mine.move_score() + self.outcome_score()
     }
 
     fn outcome_score(&self) -> usize {
-        match (self.my_move, self.their_move) {
+        match (self.mine, self.theirs) {
             (RpsMove::Rock, RpsMove::Paper) => 0,
             (RpsMove::Paper, RpsMove::Scissors) => 0,
             (RpsMove::Scissors, RpsMove::Rock) => 0,
@@ -200,7 +182,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let part_two_score: usize = raw_input
         .iter()
         .map(|l| RpsRound::parse_using_strategy(&l, PartTwoStrategy::new().as_mut()))
-        .map(|s| s.score())
+        .map(|r| r.score())
         .sum();
 
     println!("Part 2 result: {}", part_two_score);
