@@ -93,8 +93,7 @@ impl ParsingStrategy for PartOneStrategy {
 }
 
 #[derive(Default)]
-struct PartTwoStrategy {
-}
+struct PartTwoStrategy {}
 
 impl PartTwoStrategy {
     fn new() -> Box<dyn ParsingStrategy> {
@@ -116,7 +115,7 @@ impl PartTwoStrategy {
         enum MyMoveGoal {
             Win,
             Draw,
-            Lose
+            Lose,
         }
 
         let c = move_str.chars().next().unwrap();
@@ -161,10 +160,7 @@ struct RpsRound {
 }
 
 impl RpsRound {
-    fn parse_using_strategy(
-        line: &str,
-        strategy: &mut dyn ParsingStrategy,
-    ) -> Self {
+    fn parse_using_strategy(line: &str, strategy: &mut dyn ParsingStrategy) -> Self {
         strategy.parse_line(line)
     }
 
